@@ -1,0 +1,2 @@
+### Added
+- **Webhooks for what happens to a request** (#4054). Three new notification triggers: `requestApproved` (by an admin or automatically), `requestDeclined` (with the reason) and `requestFulfilled`, sent once when a download import completes what was asked for. Each is its own toggle in Settings, Notifications, off until you turn it on. Request webhooks now also say who asked: `userId`, plus `displayName` and `email` when the account has them.

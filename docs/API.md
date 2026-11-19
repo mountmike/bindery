@@ -1493,7 +1493,7 @@ without a custom template:
 
 | Field | Meaning |
 |-------|---------|
-| `eventType` | `grabbed` \| `bookImported` \| `upgrade` \| `downloadFailed` \| `health` \| `bookAnnounced` \| `requestCreated` \| `test` — present on **every** event |
+| `eventType` | `grabbed` \| `bookImported` \| `upgrade` \| `downloadFailed` \| `health` \| `bookAnnounced` \| `requestCreated` \| `requestApproved` \| `requestDeclined` \| `requestFulfilled` \| `test` — present on **every** event |
 | `title` | what happened, e.g. `Release Grabbed`, `Book Imported`, `Download Failed` |
 | `message` | the subject, e.g. `The Way of Kings · Brandon Sanderson` |
 | `body` | alias of `message` (Apprise requires a `body` field) |
@@ -1503,6 +1503,8 @@ without a custom template:
 | event extras | `author`, `size`, `path`, `status`, `clientId` when relevant |
 | `contentCheck` | on `bookImported` when `import.ebook.content_check` or `import.audiobook.content_check` is `warn` (the default) and the files look like another book, and on `downloadFailed` when `block` refused the download. Absent when the check found nothing worth recording and when it is `off`. Two notes ride without a flag and without any block: `retitled` (a download whose every file names one other title) and `truncated` (the check was skipped because it ran out of time, or a release held more EPUBs than the cap). See below |
 | `requestCreated` extras | `kind` (`book` \| `author`), `username`, `mediaType`, `requestId`. `title`, `author` and `username` have control and invisible characters removed, are length capped, and have `@`, `<`, `>`, `[` and `]` replaced with fullwidth lookalikes, and the `://` of any URL broken the same way, so a title or username cannot mention a channel, use a Slack escape such as `<!channel>`, form a markdown link or autolink a URL. The same request from the same person notifies at most once an hour, and one requester at most 10 times an hour. The event is off on every webhook until its **Request** toggle is turned on |
+| request lifecycle extras | `requestApproved`, `requestDeclined` and `requestFulfilled` (#4054) carry the `requestCreated` fields, cleaned the same way and under the same limits. `requestApproved` adds `autoApproved` (`true` when the account's own setting approved it) and is sent for automatic approvals too. `requestDeclined` adds `reason`. `requestFulfilled` is sent once per request, when a download import completes its book (for an author request, the first of the author's books), or at approval when the book was already imported. Each has its own toggle, off until turned on |
+| who asked | all four request events carry `userId`, which does not change when the user is renamed, plus `displayName` and `email` when the account has them. `email` only has control and invisible characters removed, so it is still an address; it is never part of `title` or `message` |
 
 **`contentCheck`** (#3015, #3246) says what the post-download content check found. The
 same object rides on the `bookImported` history row's `data` and webhook in
@@ -1557,7 +1559,9 @@ Which events a webhook receives is set per notification by `onGrab`,
 `onImport`, `onUpgrade`, `onFailure`, `onHealth`, `onBookAnnounced` and
 `onRequestCreated`. The last two default to `false`, and migrations 087 and
 089 set them to `false` on every notification that existed before them, so an
-upgrade sends nothing new until an admin turns them on.
+upgrade sends nothing new until an admin turns them on. `onRequestApproved`,
+`onRequestDeclined` and `onRequestFulfilled` (migration 136) default to `false`
+the same way.
 
 **`bookAnnounced`** is sent once per author run when a refresh (manual, bulk,
 Refresh all, relink) or scheduled discovery adds books to an author that had
