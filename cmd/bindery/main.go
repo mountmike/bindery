@@ -892,6 +892,7 @@ func main() {
 	// Requester requests: approval adds through authorHandler's add cores.
 	requestHandler := api.NewRequestHandler(db.NewRequestRepo(database), bookRepo, authorRepo, settingsRepo, userRepo, metaAgg, authorHandler).
 		WithNotifier(notif)
+	importScanner.WithRequestFulfiller(requestHandler) // requestFulfilled on import (#4054)
 	recHandler := api.NewRecommendationHandler(recRepo, recEngine, authorRepo, bookRepo, sched).
 		WithFinder(seriesRepo, importScanner).
 		WithEditionHydration(editionRepo, metaAgg).

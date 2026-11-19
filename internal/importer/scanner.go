@@ -128,6 +128,7 @@ type Scanner struct {
 	absLib          absNotifier
 	absLibraryIDsFn func() []string
 	notif           eventNotifier
+	requests        requestFulfiller
 	// unmatchedUnits stores the books a library scan could not match, for
 	// library adoption. Nil stores nothing (see WithUnmatchedUnits).
 	unmatchedUnits UnmatchedUnitStore
@@ -407,6 +408,25 @@ func (s *Scanner) WithABSNotifier(n absNotifier, libraryIDsFn func() []string) *
 func (s *Scanner) WithNotifier(n eventNotifier) *Scanner {
 	s.notif = n
 	return s
+}
+
+// requestFulfiller is told when a book's import has finished, so a request
+// for it can send requestFulfilled (#4054). *api.RequestHandler satisfies it.
+type requestFulfiller interface {
+	BookImported(ctx context.Context, bookID int64)
+}
+
+// WithRequestFulfiller attaches the requests API to import successes.
+func (s *Scanner) WithRequestFulfiller(f requestFulfiller) *Scanner {
+	s.requests = f
+	return s
+}
+
+// notifyRequests reports a finished import to the requests API, if attached.
+func (s *Scanner) notifyRequests(ctx context.Context, bookID *int64) {
+	if s.requests != nil && bookID != nil {
+		s.requests.BookImported(ctx, *bookID)
+	}
 }
 
 // WithFormatEnforcement wires the repos the post-download format check needs

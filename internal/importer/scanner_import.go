@@ -972,6 +972,7 @@ func (s *Scanner) tryImportInternal(ctx context.Context, dl *models.Download, do
 		observeImportSuccess(dl, models.MediaTypeAudiobook)
 		s.recordFixMatchMove(ctx, book, destDir)
 		s.notify(ctx, notifierEventBookImported, withContentCheckPayload(importedPayload(book, dl, models.MediaTypeAudiobook, destDir, mergeSkippedFiles), contentCheck))
+		s.notifyRequests(ctx, dl.BookID)
 		// A folder source moved wholesale, so nothing is left of it. A lone
 		// file moved out of a usenet job folder leaves that folder behind,
 		// with whatever extras the release carried (#3647). A merge that
@@ -1326,6 +1327,7 @@ func (s *Scanner) tryImportInternal(ctx context.Context, dl *models.Download, do
 		} else {
 			s.notify(ctx, notifierEventBookImported, withContentCheckPayload(importedPayload(book, dl, models.MediaTypeEbook, "", nil), contentCheck))
 		}
+		s.notifyRequests(ctx, dl.BookID)
 
 		// For "move" mode bindery has no further use for the source files. The
 		// download folder may, however, be a path shared with sibling torrents
