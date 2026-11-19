@@ -7,7 +7,7 @@ import { dangerLink, primaryFill } from '../../components/buttons'
 import { urlInputAttrs } from '../../util/inputAttrs'
 import { errorText } from '../../util/errorText'
 
-// The seven trigger chips, in the order both forms render them, paired with the
+// The ten trigger chips, in the order both forms render them, paired with the
 // hint that says what actually sends the event. Wording checked against the
 // senders: Grab is internal/api/queue.go and the scheduler's auto grab, Import
 // and Failure are internal/importer/scanner.go, Health is the indexer and
@@ -22,6 +22,9 @@ const TRIGGER_HINTS: Array<{ key: string; label: string; labelKey: string }> = [
   { key: 'health', label: 'Health', labelKey: 'settings.notifications.trigger.health' },
   { key: 'bookAnnounced', label: 'New book', labelKey: 'settings.notifications.onBookAnnouncedToggle' },
   { key: 'requestCreated', label: 'Request', labelKey: 'settings.notifications.requestToggle' },
+  { key: 'requestApproved', label: 'Request approved', labelKey: 'settings.notifications.requestApprovedToggle' },
+  { key: 'requestDeclined', label: 'Request declined', labelKey: 'settings.notifications.requestDeclinedToggle' },
+  { key: 'requestFulfilled', label: 'Request fulfilled', labelKey: 'settings.notifications.requestFulfilledToggle' },
 ]
 
 // Plain descriptions under the chip row. The chips are jargon on their own, and
@@ -95,6 +98,9 @@ export default function NotificationsTab() {
                         {n.onHealth && <span className="text-[10px] px-1.5 py-0.5 bg-slate-200 dark:bg-zinc-800 text-fg-muted rounded">{t('settings.notifications.onHealth')}</span>}
                         {n.onBookAnnounced && <span className="text-[10px] px-1.5 py-0.5 bg-slate-200 dark:bg-zinc-800 text-fg-muted rounded">{t('settings.notifications.onBookAnnounced')}</span>}
                         {n.onRequestCreated && <span className="text-[10px] px-1.5 py-0.5 bg-slate-200 dark:bg-zinc-800 text-fg-muted rounded">{t('settings.notifications.onRequestCreated')}</span>}
+                        {n.onRequestApproved && <span className="text-[10px] px-1.5 py-0.5 bg-slate-200 dark:bg-zinc-800 text-fg-muted rounded">{t('settings.notifications.onRequestApproved')}</span>}
+                        {n.onRequestDeclined && <span className="text-[10px] px-1.5 py-0.5 bg-slate-200 dark:bg-zinc-800 text-fg-muted rounded">{t('settings.notifications.onRequestDeclined')}</span>}
+                        {n.onRequestFulfilled && <span className="text-[10px] px-1.5 py-0.5 bg-slate-200 dark:bg-zinc-800 text-fg-muted rounded">{t('settings.notifications.onRequestFulfilled')}</span>}
                       </div>
                     </div>
                   </div>
@@ -182,6 +188,9 @@ function EditNotificationForm({ notification, onClose, onSaved }: { notification
   const [onHealth, setOnHealth] = useState(notification.onHealth)
   const [onBookAnnounced, setOnBookAnnounced] = useState(notification.onBookAnnounced ?? false)
   const [onRequestCreated, setOnRequestCreated] = useState(notification.onRequestCreated ?? false)
+  const [onRequestApproved, setOnRequestApproved] = useState(notification.onRequestApproved ?? false)
+  const [onRequestDeclined, setOnRequestDeclined] = useState(notification.onRequestDeclined ?? false)
+  const [onRequestFulfilled, setOnRequestFulfilled] = useState(notification.onRequestFulfilled ?? false)
   const [saveError, setSaveError] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -194,7 +203,7 @@ function EditNotificationForm({ notification, onClose, onSaved }: { notification
     }
     setSaving(true)
     try {
-      const updated = await api.updateNotification(notification.id, { ...notification, name, url, topic, method, headers: headersJSON, onGrab, onImport, onFailure, onUpgrade, onHealth, onBookAnnounced, onRequestCreated })
+      const updated = await api.updateNotification(notification.id, { ...notification, name, url, topic, method, headers: headersJSON, onGrab, onImport, onFailure, onUpgrade, onHealth, onBookAnnounced, onRequestCreated, onRequestApproved, onRequestDeclined, onRequestFulfilled })
       onSaved(updated)
     } catch (err: unknown) {
       setSaveError(t('settings.notifications.saveFailed', { error: errorText(err, t('common.unknownError', 'Unknown error')) }))
@@ -247,6 +256,9 @@ function EditNotificationForm({ notification, onClose, onSaved }: { notification
           <button type="button" onClick={() => setOnHealth(!onHealth)} title={triggerTitle(t, 'health')} className={toggleCls(onHealth)}>{t('settings.notifications.trigger.health', 'Health')}</button>
           <button type="button" aria-pressed={onBookAnnounced} onClick={() => setOnBookAnnounced(!onBookAnnounced)} title={triggerTitle(t, 'bookAnnounced')} className={toggleCls(onBookAnnounced)}>{t('settings.notifications.onBookAnnouncedToggle')}</button>
           <button type="button" aria-pressed={onRequestCreated} onClick={() => setOnRequestCreated(!onRequestCreated)} title={triggerTitle(t, 'requestCreated')} className={toggleCls(onRequestCreated)}>{t('settings.notifications.requestToggle')}</button>
+          <button type="button" aria-pressed={onRequestApproved} onClick={() => setOnRequestApproved(!onRequestApproved)} title={triggerTitle(t, 'requestApproved')} className={toggleCls(onRequestApproved)}>{t('settings.notifications.requestApprovedToggle')}</button>
+          <button type="button" aria-pressed={onRequestDeclined} onClick={() => setOnRequestDeclined(!onRequestDeclined)} title={triggerTitle(t, 'requestDeclined')} className={toggleCls(onRequestDeclined)}>{t('settings.notifications.requestDeclinedToggle')}</button>
+          <button type="button" aria-pressed={onRequestFulfilled} onClick={() => setOnRequestFulfilled(!onRequestFulfilled)} title={triggerTitle(t, 'requestFulfilled')} className={toggleCls(onRequestFulfilled)}>{t('settings.notifications.requestFulfilledToggle')}</button>
         </div>
         <TriggerHints />
       </div>
@@ -278,6 +290,9 @@ function AddNotificationForm({ onClose, onAdded }: { onClose: () => void; onAdde
   const [onHealth, setOnHealth] = useState(false)
   const [onBookAnnounced, setOnBookAnnounced] = useState(false)
   const [onRequestCreated, setOnRequestCreated] = useState(false)
+  const [onRequestApproved, setOnRequestApproved] = useState(false)
+  const [onRequestDeclined, setOnRequestDeclined] = useState(false)
+  const [onRequestFulfilled, setOnRequestFulfilled] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -294,6 +309,7 @@ function AddNotificationForm({ onClose, onAdded }: { onClose: () => void; onAdde
         name, url, topic, method, type: 'webhook',
         headers: headersJSON,
         onGrab, onImport, onFailure, onUpgrade, onHealth, onBookAnnounced, onRequestCreated,
+        onRequestApproved, onRequestDeclined, onRequestFulfilled,
         enabled: true,
       })
       onAdded(n)
@@ -348,6 +364,9 @@ function AddNotificationForm({ onClose, onAdded }: { onClose: () => void; onAdde
           <button type="button" onClick={() => setOnHealth(!onHealth)} title={triggerTitle(t, 'health')} className={toggleCls(onHealth)}>{t('settings.notifications.trigger.health', 'Health')}</button>
           <button type="button" aria-pressed={onBookAnnounced} onClick={() => setOnBookAnnounced(!onBookAnnounced)} title={triggerTitle(t, 'bookAnnounced')} className={toggleCls(onBookAnnounced)}>{t('settings.notifications.onBookAnnouncedToggle')}</button>
           <button type="button" aria-pressed={onRequestCreated} onClick={() => setOnRequestCreated(!onRequestCreated)} title={triggerTitle(t, 'requestCreated')} className={toggleCls(onRequestCreated)}>{t('settings.notifications.requestToggle')}</button>
+          <button type="button" aria-pressed={onRequestApproved} onClick={() => setOnRequestApproved(!onRequestApproved)} title={triggerTitle(t, 'requestApproved')} className={toggleCls(onRequestApproved)}>{t('settings.notifications.requestApprovedToggle')}</button>
+          <button type="button" aria-pressed={onRequestDeclined} onClick={() => setOnRequestDeclined(!onRequestDeclined)} title={triggerTitle(t, 'requestDeclined')} className={toggleCls(onRequestDeclined)}>{t('settings.notifications.requestDeclinedToggle')}</button>
+          <button type="button" aria-pressed={onRequestFulfilled} onClick={() => setOnRequestFulfilled(!onRequestFulfilled)} title={triggerTitle(t, 'requestFulfilled')} className={toggleCls(onRequestFulfilled)}>{t('settings.notifications.requestFulfilledToggle')}</button>
         </div>
         <TriggerHints />
       </div>

@@ -1716,6 +1716,12 @@
       "onBookAnnouncedToggle": "Ny bok",
       "onRequestCreated": "Ved forespørsel",
       "requestToggle": "Forespørsel",
+      "onRequestApproved": "Ved godkjent forespørsel",
+      "requestApprovedToggle": "Forespørsel godkjent",
+      "onRequestDeclined": "Ved avslått forespørsel",
+      "requestDeclinedToggle": "Forespørsel avslått",
+      "onRequestFulfilled": "Ved oppfylt forespørsel",
+      "requestFulfilledToggle": "Forespørsel oppfylt",
       "triggerHintsLabel": "Hva hver utløser betyr",
       "eventHints": {
         "grab": "en utgivelse ble sendt til nedlastingsklienten din",
@@ -1724,7 +1730,10 @@
         "upgrade": "reservert for når en bedre fil erstatter en du allerede har. Ingenting sender dette ennå.",
         "health": "en indekserer eller nedlastingsklient begynte å feile kontrollene sine",
         "bookAnnounced": "en oppdatering eller den planlagte sjekken fant nye bøker fra en forfatter du allerede følger",
-        "requestCreated": "en av brukerne dine ba om at en bok eller forfatter skulle legges til"
+        "requestCreated": "en av brukerne dine ba om at en bok eller forfatter skulle legges til",
+        "requestApproved": "en forespørsel ble godkjent, av en administrator eller automatisk",
+        "requestDeclined": "en administrator avslo en forespørsel",
+        "requestFulfilled": "det en forespørsel ba om, er nå i biblioteket ditt"
       },
       "testSent": "Testvarsel sendt!",
       "saveFailed": "Kunne ikke lagre varselet: {{error}}",

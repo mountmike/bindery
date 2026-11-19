@@ -154,6 +154,9 @@ describe('NotificationsTab add form', () => {
       onHealth: true,
       onBookAnnounced: false,
       onRequestCreated: true,
+      onRequestApproved: false,
+      onRequestDeclined: false,
+      onRequestFulfilled: false,
       enabled: true,
     }))
     expect(await screen.findByText('Hook')).toBeInTheDocument()
@@ -224,6 +227,9 @@ describe('NotificationsTab edit form', () => {
       onHealth: true,
       onBookAnnounced: false,
       onRequestCreated: true,
+      onRequestApproved: false,
+      onRequestDeclined: false,
+      onRequestFulfilled: false,
     }))
     expect(await screen.findByText('Renamed')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument()

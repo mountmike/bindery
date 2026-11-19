@@ -1979,6 +1979,12 @@
       "onBookAnnouncedToggle": "New book",
       "onRequestCreated": "On Request",
       "requestToggle": "Request",
+      "onRequestApproved": "On Request Approved",
+      "requestApprovedToggle": "Request approved",
+      "onRequestDeclined": "On Request Declined",
+      "requestDeclinedToggle": "Request declined",
+      "onRequestFulfilled": "On Request Fulfilled",
+      "requestFulfilledToggle": "Request fulfilled",
       "triggerHintsLabel": "What each trigger means",
       "eventHints": {
         "grab": "a release was sent to your download client",
@@ -1987,7 +1993,10 @@
         "upgrade": "reserved for a better file replacing one you already have. Nothing sends it yet.",
         "health": "an indexer or a download client started failing its checks",
         "bookAnnounced": "a refresh or the scheduled check found new books for an author you already follow",
-        "requestCreated": "one of your users asked for a book or an author to be added"
+        "requestCreated": "one of your users asked for a book or an author to be added",
+        "requestApproved": "a request was approved, by an admin or automatically",
+        "requestDeclined": "an admin declined a request",
+        "requestFulfilled": "what a request asked for is now in your library"
       },
       "testSent": "Test notification sent!",
       "saveFailed": "Couldn't save notification: {{error}}",

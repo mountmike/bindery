@@ -21,6 +21,10 @@ export interface NotificationConfig {
   // Fires when a requester asks for a book or an author. Optional so an
   // older backend's response still type checks.
   onRequestCreated?: boolean
+  // The request lifecycle events (#4054). Optional for the same reason.
+  onRequestApproved?: boolean
+  onRequestDeclined?: boolean
+  onRequestFulfilled?: boolean
   enabled: boolean
 }
 

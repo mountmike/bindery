@@ -1113,6 +1113,12 @@
       "onBookAnnouncedToggle": "Ny bok",
       "onRequestCreated": "Vid förfrågan",
       "requestToggle": "Förfrågan",
+      "onRequestApproved": "Vid godkänd förfrågan",
+      "requestApprovedToggle": "Förfrågan godkänd",
+      "onRequestDeclined": "Vid nekad förfrågan",
+      "requestDeclinedToggle": "Förfrågan nekad",
+      "onRequestFulfilled": "Vid uppfylld förfrågan",
+      "requestFulfilledToggle": "Förfrågan uppfylld",
       "triggerHintsLabel": "Vad varje utlösare betyder",
       "eventHints": {
         "grab": "en release skickades till din nedladdningsklient",
@@ -1121,7 +1127,10 @@
         "upgrade": "reserverad för när en bättre fil ersätter en som du redan har. Inget skickar den ännu.",
         "health": "en indexerare eller nedladdningsklient började misslyckas med sina kontroller",
         "bookAnnounced": "en uppdatering eller den schemalagda kontrollen hittade nya böcker av en författare som du redan följer",
-        "requestCreated": "en av dina användare bad om att en bok eller författare skulle läggas till"
+        "requestCreated": "en av dina användare bad om att en bok eller författare skulle läggas till",
+        "requestApproved": "en förfrågan godkändes, av en administratör eller automatiskt",
+        "requestDeclined": "en administratör nekade en förfrågan",
+        "requestFulfilled": "det som en förfrågan gällde finns nu i ditt bibliotek"
       },
       "testSent": "Testavisering skickad!",
       "saveFailed": "Kunde inte spara aviseringen: {{error}}"
