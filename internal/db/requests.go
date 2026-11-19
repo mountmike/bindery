@@ -437,6 +437,55 @@ func (r *RequestRepo) Decline(ctx context.Context, id, adminID int64, reason str
 	return nil
 }
 
+// MarkFulfilled stamps fulfilled_at on the approved requests that bookID now
+// satisfies, and returns them. A book request is satisfied when its book is
+// imported. An author request is satisfied by the first of the author's books
+// to be imported, not by all of them. Both are the rule GET /requests already
+// reports as "fulfilled". The stamp is set once, so a request comes
+// back from here once, however often its book is imported again (#4054).
+func (r *RequestRepo) MarkFulfilled(ctx context.Context, bookID int64) ([]models.LibraryRequest, error) {
+	ids, err := r.stampFulfilled(ctx, bookID)
+	if err != nil {
+		return nil, fmt.Errorf("mark requests fulfilled: %w", err)
+	}
+	var out []models.LibraryRequest
+	for _, id := range ids {
+		req, err := r.GetByID(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		if req != nil {
+			out = append(out, *req)
+		}
+	}
+	return out, nil
+}
+
+// stampFulfilled is MarkFulfilled's write. It is its own function so the rows
+// are closed before MarkFulfilled reads: the pool holds a single connection.
+func (r *RequestRepo) stampFulfilled(ctx context.Context, bookID int64) ([]int64, error) {
+	rows, err := r.db.QueryContext(ctx, `
+		UPDATE requests SET fulfilled_at = ?
+		WHERE status = 'approved' AND fulfilled_at IS NULL AND (
+			(kind = 'book' AND result_book_id IN (SELECT id FROM books WHERE id = ? AND status = 'imported'))
+			OR (kind = 'author' AND result_author_id IN
+				(SELECT author_id FROM books WHERE id = ? AND status = 'imported' AND excluded = 0)))
+		RETURNING id`, time.Now().UTC(), bookID, bookID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var ids []int64
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	return ids, rows.Err()
+}
+
 // Reopen puts ownerID's approved request back to pending, for when what it
 // added has since left the library and the requester asks again. It keeps
 // the row, so the (owner, kind, foreign id) uniqueness still holds. The cap
@@ -450,7 +499,7 @@ func (r *RequestRepo) Reopen(ctx context.Context, id, ownerID int64, mediaType, 
 	now := time.Now().UTC()
 	res, err := r.db.ExecContext(ctx, `
 		UPDATE requests SET status = 'pending', media_type = ?, payload_json = ?, decided_by = NULL,
-		       decided_at = NULL, result_book_id = NULL, result_author_id = NULL,
+		       decided_at = NULL, result_book_id = NULL, result_author_id = NULL, fulfilled_at = NULL,
 		       decline_reason = '', created_at = ?, updated_at = ?, created_via = ?, created_by_user_id = ?
 		WHERE id = ? AND owner_user_id = ? AND status = 'approved' AND `+pendingBelowCap,
 		mediaType, payload, now, now, createdVia, createdBy, id, ownerID, ownerID, maxPending)

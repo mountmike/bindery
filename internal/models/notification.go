@@ -29,4 +29,10 @@ type Notification struct {
 	// OnRequestCreated fires when a requester asks for a book or an author
 	// (migration 089). Off by default, like OnHealth.
 	OnRequestCreated bool `json:"onRequestCreated"`
+
+	// The request lifecycle events (migration 136, #4054): a request was
+	// approved, declined, or what it asked for arrived. Off by default.
+	OnRequestApproved  bool `json:"onRequestApproved"`
+	OnRequestDeclined  bool `json:"onRequestDeclined"`
+	OnRequestFulfilled bool `json:"onRequestFulfilled"`
 }
