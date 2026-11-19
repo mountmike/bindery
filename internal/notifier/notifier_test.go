@@ -44,6 +44,10 @@ func TestMatchesEvent(t *testing.T) {
 		{models.Notification{OnUpgrade: false}, EventUpgrade, false},
 		{models.Notification{OnRequestCreated: true}, EventRequestCreated, true},
 		{models.Notification{OnRequestCreated: false, OnGrab: true, OnHealth: true}, EventRequestCreated, false},
+		{models.Notification{OnRequestApproved: true}, EventRequestApproved, true},
+		{models.Notification{OnRequestDeclined: true}, EventRequestDeclined, true},
+		{models.Notification{OnRequestFulfilled: true}, EventRequestFulfilled, true},
+		{models.Notification{OnRequestCreated: true, OnRequestApproved: true, OnRequestDeclined: true}, EventRequestFulfilled, false},
 		// Unknown event type always returns false.
 		{models.Notification{OnGrab: true, OnImport: true}, "unknown", false},
 	}
@@ -400,6 +404,9 @@ func TestNormalizeEventPayload(t *testing.T) {
 		{"health", EventHealth, map[string]interface{}{"status": "error", "message": "client offline"}, "Download Client Unhealthy", "client offline"},
 		{"request-book", EventRequestCreated, map[string]interface{}{"title": "Dune", "author": "Frank Herbert", "kind": "book", "username": "reader"}, "Book Requested", "Dune · Frank Herbert (requested by reader)"},
 		{"request-author", EventRequestCreated, map[string]interface{}{"title": "Frank Herbert", "author": "Frank Herbert", "kind": "author", "username": "reader"}, "Author Requested", "Frank Herbert (requested by reader)"},
+		{"request-approved", EventRequestApproved, map[string]interface{}{"title": "Dune", "author": "Frank Herbert"}, "Request Approved", "Dune · Frank Herbert"},
+		{"request-declined", EventRequestDeclined, map[string]interface{}{"title": "Dune", "author": "Frank Herbert", "reason": "we have it"}, "Request Declined", "Dune · Frank Herbert: we have it"},
+		{"request-fulfilled", EventRequestFulfilled, map[string]interface{}{"title": "Frank Herbert", "author": "Frank Herbert"}, "Request Fulfilled", "Frank Herbert"},
 		{"test", "test", map[string]interface{}{}, "Bindery Test", "Bindery notification test"},
 	}
 	for _, c := range cases {

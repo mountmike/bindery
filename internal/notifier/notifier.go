@@ -32,7 +32,18 @@ const (
 	// the payload shape live in internal/api/author_discovery.go.
 	EventBookAnnounced  = "bookAnnounced"
 	EventRequestCreated = "requestCreated"
+	// The request lifecycle events (#4054). Fulfilled fires once per request,
+	// when what it asked for first has a file.
+	EventRequestApproved  = "requestApproved"
+	EventRequestDeclined  = "requestDeclined"
+	EventRequestFulfilled = "requestFulfilled"
 )
+
+var requestEventTitles = map[string]string{
+	EventRequestApproved:  "Request Approved",
+	EventRequestDeclined:  "Request Declined",
+	EventRequestFulfilled: "Request Fulfilled",
+}
 
 // normalizeEventPayload gives every event a consistent, human-readable shape so
 // relays that render without a template (ntfy, Apprise) read well, and so a
@@ -135,6 +146,15 @@ func normalizeEventPayload(eventType string, payload map[string]interface{}) map
 		}
 		if user, _ := payload["username"].(string); user != "" {
 			body += " (requested by " + user + ")"
+		}
+	case EventRequestApproved, EventRequestDeclined, EventRequestFulfilled:
+		// Sanitised by the API, like requestCreated.
+		title, body = requestEventTitles[eventType], item
+		if author != "" && author != item {
+			body = item + " · " + author
+		}
+		if reason, _ := payload["reason"].(string); reason != "" {
+			body += ": " + reason
 		}
 	case "test":
 		title = "Bindery Test"
@@ -306,6 +326,12 @@ func (n *Notifier) matchesEvent(notif *models.Notification, eventType string) bo
 		return notif.OnBookAnnounced
 	case EventRequestCreated:
 		return notif.OnRequestCreated
+	case EventRequestApproved:
+		return notif.OnRequestApproved
+	case EventRequestDeclined:
+		return notif.OnRequestDeclined
+	case EventRequestFulfilled:
+		return notif.OnRequestFulfilled
 	}
 	return false
 }
