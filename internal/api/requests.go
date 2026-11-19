@@ -286,36 +286,65 @@ func requestCreatedPayload(req models.LibraryRequest, username string) map[strin
 	}
 }
 
-// notifyCreated sends the event without holding up the requester's response:
-// webhook targets can be slow, and the request is already stored.
-func (h *RequestHandler) notifyCreated(ctx context.Context, req models.LibraryRequest) {
+// notifyRequestEvent sends a request event without holding up the response: webhook
+// targets can be slow, and the request is already stored. extra is added to the
+// payload. Every request event shares the limits requestCreated has (#4054).
+func (h *RequestHandler) notifyRequestEvent(ctx context.Context, event string, req models.LibraryRequest, extra map[string]interface{}) {
 	if h.notif == nil {
 		return
 	}
-	if h.notified != nil && !h.notified.first(fmt.Sprintf("%d|%s|%s", req.OwnerUserID, req.Kind, req.ForeignID)) {
+	if h.notified != nil && !h.notified.first(fmt.Sprintf("%s|%d|%s|%s", event, req.OwnerUserID, req.Kind, req.ForeignID)) {
 		return
 	}
 	if h.ownerNotifies != nil {
 		if ok, firstRefusal := h.ownerNotifies.allow(req.OwnerUserID); !ok {
 			if firstRefusal {
-				slog.Warn("requests: requestCreated webhooks for this requester paused for the rest of the hour",
+				slog.Warn("requests: request webhooks for this requester paused for the rest of the hour",
 					"owner_user_id", req.OwnerUserID, "limit", requestNotifyPerOwner)
 			}
 			return
 		}
 	}
 	username := ""
+	var owner *db.User
 	if h.users != nil {
 		if u, err := h.users.GetByID(ctx, req.OwnerUserID); err == nil && u != nil {
-			username = u.Username
+			username, owner = u.Username, u
 		}
 	}
 	payload := requestCreatedPayload(req, username)
+	// userId is the stable key: a username can be renamed. email is cleaned
+	// but not run through SafeText, which would replace its "@", and it is
+	// never part of the title or message.
+	payload["userId"] = req.OwnerUserID
+	if owner != nil && owner.DisplayName != nil && *owner.DisplayName != "" {
+		payload["displayName"] = notifier.SafeText(*owner.DisplayName, requestUsernameMaxRunes)
+	}
+	if owner != nil && owner.Email != nil && *owner.Email != "" {
+		payload["email"] = notifier.CleanText(*owner.Email, requestEmailMaxRunes)
+	}
+	for k, v := range extra {
+		payload[k] = v
+	}
 	sendCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
 	go func() {
 		defer cancel()
-		h.notif.Send(sendCtx, notifier.EventRequestCreated, payload)
+		h.notif.Send(sendCtx, event, payload)
 	}()
+}
+
+// BookImported sends requestFulfilled for each approved request that bookID
+// now satisfies. The importer calls it after an import. The repo stamps a
+// request once, so an upgrade or a second import sends nothing.
+func (h *RequestHandler) BookImported(ctx context.Context, bookID int64) {
+	fulfilled, err := h.requests.MarkFulfilled(ctx, bookID)
+	if err != nil {
+		slog.Warn("requests: could not mark requests fulfilled", "book_id", bookID, "error", err)
+		return
+	}
+	for _, req := range fulfilled {
+		h.notifyRequestEvent(ctx, notifier.EventRequestFulfilled, req, nil)
+	}
 }
 
 // NewRequestHandler wires the requests API. adder is normally the
@@ -740,7 +769,7 @@ func (h *RequestHandler) writeCreated(ctx context.Context, w http.ResponseWriter
 			return
 		}
 	}
-	h.notifyCreated(ctx, req)
+	h.notifyRequestEvent(ctx, notifier.EventRequestCreated, req, nil)
 	writeJSON(w, http.StatusCreated, toRequestResponse(req, false))
 }
 
@@ -1366,6 +1395,11 @@ func (h *RequestHandler) runClaimedApproval(ctx context.Context, req *models.Lib
 	}
 	done.SearchRunID = runID
 	done.Notice = notice
+	h.notifyRequestEvent(ctx, notifier.EventRequestApproved, *done, map[string]interface{}{"autoApproved": done.DecidedBy == nil})
+	// The book may have been on disk before the approval.
+	if done.ResultBookID != nil {
+		h.BookImported(ctx, *done.ResultBookID)
+	}
 	return done, 0, "", nil
 }
 
@@ -1587,5 +1621,6 @@ func (h *RequestHandler) Decline(w http.ResponseWriter, r *http.Request) {
 		writeServerError(w, r, fmt.Errorf("reload declined request: %w", err))
 		return
 	}
+	h.notifyRequestEvent(ctx, notifier.EventRequestDeclined, *done, map[string]interface{}{"reason": notifier.SafeText(done.DeclineReason, requestReasonMaxRunes)})
 	writeJSON(w, http.StatusOK, toRequestResponse(*done, true))
 }

@@ -287,7 +287,10 @@ func TestRequestsCreate_AutoApproveSendsNoRequestCreated(t *testing.T) {
 	}
 	select {
 	case ev := <-capture.events:
-		t.Fatalf("auto approved request sent %s: %+v", ev.event, ev.payload)
+		// requestApproved is sent for an automatic approval too (#4054).
+		if ev.event != notifier.EventRequestApproved {
+			t.Fatalf("auto approved request sent %s: %+v", ev.event, ev.payload)
+		}
 	case <-time.After(300 * time.Millisecond):
 	}
 }

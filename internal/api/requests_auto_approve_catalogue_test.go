@@ -144,9 +144,9 @@ func TestRequestsCreate_AutoApproveCatalogueBookTable(t *testing.T) {
 			// requestCreated goes out only when the request stays pending.
 			select {
 			case ev := <-capture.events:
-				if tc.want.approved {
+				if tc.want.approved && ev.event == notifier.EventRequestCreated {
 					t.Errorf("approved request sent %s", ev.event)
-				} else if ev.event != notifier.EventRequestCreated {
+				} else if !tc.want.approved && ev.event != notifier.EventRequestCreated {
 					t.Errorf("event %q, want %q", ev.event, notifier.EventRequestCreated)
 				}
 			case <-time.After(300 * time.Millisecond):

@@ -9,6 +9,7 @@ const (
 	requestTitleMaxRunes    = 300
 	requestAuthorMaxRunes   = 200
 	requestUsernameMaxRunes = 64
+	requestEmailMaxRunes    = 254 // the longest address a mail server accepts
 	requestReasonMaxRunes   = 500
 	requestForeignIDMaxLen  = 128
 )
